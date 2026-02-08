@@ -25,17 +25,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onToggleFavorite,
 }) => {
   const icon = getProductIcon(product.imageKey);
+  const isImageFile = product.imageKey.startsWith('IMG/');
 
   return (
     <div className={cn(
       'card-product p-3 flex items-center gap-3 animate-slide-up',
       quantity > 0 && 'ring-2 ring-primary/30 bg-accent/30'
     )}>
-      {/* Icon */}
+      {/* Icon / Image */}
       <div className="icon-wrapper">
-        <span role="img" aria-label={product.displayName}>
-          {icon}
-        </span>
+        {isImageFile ? (
+          <img
+            src={'/' + product.imageKey}
+            alt={product.displayName}
+            className="w-8 h-8 rounded object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : (
+          <span role="img" aria-label={product.displayName}>
+            {icon}
+          </span>
+        )}
+        {isImageFile && (
+          <span className="hidden" role="img" aria-label={product.displayName}>
+            {icon}
+          </span>
+        )}
       </div>
 
       {/* Product Name */}
