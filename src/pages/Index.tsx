@@ -58,8 +58,8 @@ const Index = () => {
       result = result.filter(p => favorites.has(p.id));
     }
 
-    // Filter by category
-    if (selectedCategory && !showFavorites) {
+    // Filter by category (only when NOT searching)
+    if (selectedCategory && !showFavorites && !searchQuery.trim()) {
       result = result.filter(p => p.categoryId === selectedCategory);
     }
 
