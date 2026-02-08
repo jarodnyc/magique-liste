@@ -11,21 +11,21 @@ export const SEED_CATEGORIES: Category[] = [
 
 export const SEED_PRODUCTS: Product[] = [
   // Fruits & Légumes
-  { id: 'FL-001', categoryId: 'cat_fl', displayName: 'Bananes', supplierRef: 'FL-001', imageKey: 'banana' },
-  { id: 'FL-002', categoryId: 'cat_fl', displayName: 'Pommes', supplierRef: 'FL-002', imageKey: 'apple' },
-  { id: 'FL-003', categoryId: 'cat_fl', displayName: 'Tomates', supplierRef: 'FL-003', imageKey: 'tomato' },
+  { id: 'FL-001', categoryId: 'cat_fl', displayName: 'Bananes', supplierRef: 'FL-001', imageKey: 'IMG/banane.png' },
+  { id: 'FL-002', categoryId: 'cat_fl', displayName: 'Pommes', supplierRef: 'FL-002', imageKey: 'IMG/pomme.png' },
+  { id: 'FL-003', categoryId: 'cat_fl', displayName: 'Tomates', supplierRef: 'FL-003', imageKey: 'IMG/tomate.png' },
   { id: 'FL-004', categoryId: 'cat_fl', displayName: 'Oignons', supplierRef: 'FL-004', imageKey: 'onion' },
   { id: 'FL-005', categoryId: 'cat_fl', displayName: 'Ail', supplierRef: 'FL-005', imageKey: 'garlic' },
   { id: 'FL-006', categoryId: 'cat_fl', displayName: 'Citron', supplierRef: 'FL-006', imageKey: 'lemon' },
   // Épicerie
-  { id: 'EP-001', categoryId: 'cat_ep', displayName: 'Riz', supplierRef: 'EP-001', imageKey: 'rice' },
+  { id: 'EP-001', categoryId: 'cat_ep', displayName: 'Riz', supplierRef: 'EP-001', imageKey: 'IMG/riz.png' },
   { id: 'EP-002', categoryId: 'cat_ep', displayName: 'Pâtes', supplierRef: 'EP-002', imageKey: 'pasta' },
   { id: 'EP-003', categoryId: 'cat_ep', displayName: "Huile d'olive", supplierRef: 'OIL-001', imageKey: 'olive-oil' },
   { id: 'EP-004', categoryId: 'cat_ep', displayName: 'Farine', supplierRef: 'EP-004', imageKey: 'flour' },
   { id: 'EP-005', categoryId: 'cat_ep', displayName: 'Sucre', supplierRef: 'EP-005', imageKey: 'sugar' },
   { id: 'EP-006', categoryId: 'cat_ep', displayName: 'Café', supplierRef: 'EP-006', imageKey: 'coffee' },
   // Produits frais
-  { id: 'PF-001', categoryId: 'cat_pf', displayName: 'Lait demi-écrémé', supplierRef: 'PF-001', imageKey: 'milk' },
+  { id: 'PF-001', categoryId: 'cat_pf', displayName: 'Lait demi-écrémé', supplierRef: 'PF-001', imageKey: 'IMG/lait.png' },
   { id: 'PF-002', categoryId: 'cat_pf', displayName: 'Oeufs', supplierRef: 'PF-002', imageKey: 'eggs' },
   { id: 'PF-003', categoryId: 'cat_pf', displayName: 'Beurre', supplierRef: 'PF-003', imageKey: 'butter' },
   { id: 'PF-004', categoryId: 'cat_pf', displayName: 'Yaourts nature', supplierRef: 'PF-004', imageKey: 'yogurt' },
