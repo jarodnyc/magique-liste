@@ -244,11 +244,11 @@ export const useGroceryStore = () => {
       }));
   }, [products, quantities, categories]);
 
-  // Generate export text
+  // Generate export text (newline-separated for WhatsApp compatibility)
   const generateExportText = useCallback(() => {
-    return getListItems()
-      .map(item => `${item.product.supplierRef} x${item.quantity}`)
-      .join('\n');
+    const lines = getListItems()
+      .map(item => `${item.product.supplierRef} x${item.quantity}`);
+    return lines.join('\n');
   }, [getListItems]);
 
   // Generate grouped export for PDF
