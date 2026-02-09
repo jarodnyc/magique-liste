@@ -9,7 +9,8 @@ import {
   Mail,
   Database,
   Truck,
-  Package
+  Package,
+  Tag
 } from 'lucide-react';
 import { Recipient, Category, Product, CSVImportResult, Supplier } from '@/types/grocery';
 import { 
@@ -89,6 +90,10 @@ export const Settings: React.FC<SettingsProps> = ({
   const [newProductSupplier, setNewProductSupplier] = useState('');
   const [newProductImage, setNewProductImage] = useState('');
   
+  // Category form
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySortOrder, setNewCategorySortOrder] = useState('');
+  
   // CSV Import state
   const [importPreview, setImportPreview] = useState<CSVImportResult | null>(null);
   const [importType, setImportType] = useState<'categories' | 'products' | null>(null);
@@ -134,6 +139,20 @@ export const Settings: React.FC<SettingsProps> = ({
         name: newSupplierName.trim(),
       });
       setNewSupplierName('');
+    }
+  };
+
+  // Category handlers
+  const handleAddCategory = () => {
+    if (newCategoryName.trim()) {
+      const sortOrder = parseInt(newCategorySortOrder, 10);
+      onUpdateCategories([{
+        id: `cat_${generateId()}`,
+        name: newCategoryName.trim(),
+        sortOrder: isNaN(sortOrder) ? categories.length + 1 : sortOrder,
+      }], 'merge');
+      setNewCategoryName('');
+      setNewCategorySortOrder('');
     }
   };
 
@@ -418,6 +437,21 @@ export const Settings: React.FC<SettingsProps> = ({
                     <input type="text" placeholder="Clé image (optionnel, ex: emoji ou IMG/fichier.png)" value={newProductImage} onChange={(e) => setNewProductImage(e.target.value)} className="search-input" />
                     <button onClick={handleAddProduct} disabled={!newProductName.trim() || !newProductRef.trim()} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                       <Plus className="w-4 h-4" /> Ajouter le produit
+                    </button>
+                  </div>
+                </div>
+
+                {/* Add Category manually */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Ajouter une catégorie
+                  </h4>
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-xl">
+                    <input type="text" placeholder="Nom de la catégorie *" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="search-input" />
+                    <input type="number" placeholder="Ordre de tri (optionnel)" value={newCategorySortOrder} onChange={(e) => setNewCategorySortOrder(e.target.value)} className="search-input" />
+                    <button onClick={handleAddCategory} disabled={!newCategoryName.trim()} className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                      <Plus className="w-4 h-4" /> Ajouter la catégorie
                     </button>
                   </div>
                 </div>
