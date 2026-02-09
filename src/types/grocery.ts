@@ -4,9 +4,15 @@ export interface Category {
   sortOrder: number;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+}
+
 export interface Product {
   id: string;
   categoryId: string;
+  supplierId?: string;
   displayName: string;
   supplierRef: string;
   imageKey: string;
