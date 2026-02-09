@@ -1,4 +1,8 @@
-import { Category, Product } from '@/types/grocery';
+import { Category, Product, Supplier } from '@/types/grocery';
+
+export const SEED_SUPPLIERS: Supplier[] = [
+  { id: 'sup_default', name: 'Fournisseur par défaut' },
+];
 
 export const SEED_CATEGORIES: Category[] = [
   { id: 'cat_fl', name: 'Fruits & Légumes', sortOrder: 1 },

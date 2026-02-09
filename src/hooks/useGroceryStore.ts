@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Category, Product, Recipient } from '@/types/grocery';
-import { SEED_CATEGORIES, SEED_PRODUCTS, CAT_OTHER_ID } from '@/data/seedData';
+import { Category, Product, Recipient, Supplier } from '@/types/grocery';
+import { SEED_CATEGORIES, SEED_PRODUCTS, SEED_SUPPLIERS, CAT_OTHER_ID } from '@/data/seedData';
 
 const STORAGE_KEYS = {
   categories: 'categories',
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   favorites: 'favorites',
   waRecipients: 'waRecipients',
   emailRecipients: 'emailRecipients',
+  suppliers: 'suppliers',
 };
 
 // Ensure cat_other exists
@@ -49,6 +50,12 @@ export const useGroceryStore = () => {
     return stored.length > 0 ? ensureCatOther(stored) : SEED_CATEGORIES;
   });
 
+  // Suppliers
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
+    const stored = loadFromStorage<Supplier[]>(STORAGE_KEYS.suppliers, []);
+    return stored.length > 0 ? stored : SEED_SUPPLIERS;
+  });
+
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
     const stored = loadFromStorage<Product[]>(STORAGE_KEYS.products, []);
@@ -80,6 +87,10 @@ export const useGroceryStore = () => {
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.categories, categories);
   }, [categories]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.suppliers, suppliers);
+  }, [suppliers]);
 
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.products, products);
@@ -233,6 +244,44 @@ export const useGroceryStore = () => {
     setEmailRecipients(prev => prev.filter(r => r.id !== id));
   }, []);
 
+  // Supplier actions
+  const addSupplier = useCallback((supplier: Supplier) => {
+    setSuppliers(prev => [...prev, supplier]);
+  }, []);
+
+  const updateSupplier = useCallback((id: string, updates: Partial<Supplier>) => {
+    setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+  }, []);
+
+  const deleteSupplier = useCallback((id: string) => {
+    setSuppliers(prev => prev.filter(s => s.id !== id));
+    // Remove supplierId from products that used this supplier
+    setProducts(prev => prev.map(p => p.supplierId === id ? { ...p, supplierId: undefined } : p));
+  }, []);
+
+  // Add product manually
+  const addProduct = useCallback((product: Product) => {
+    const validCategoryIds = new Set(categories.map(c => c.id));
+    const sanitized = validCategoryIds.has(product.categoryId)
+      ? product
+      : { ...product, categoryId: CAT_OTHER_ID };
+    setProducts(prev => [...prev, sanitized]);
+  }, [categories]);
+
+  // Delete product
+  const deleteProduct = useCallback((id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    setQuantities(prev => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
+    setFavorites(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+  }, []);
+
   // Get items with quantity > 0
   const getListItems = useCallback(() => {
     return products
@@ -241,46 +290,61 @@ export const useGroceryStore = () => {
         product: p,
         quantity: quantities[p.id],
         category: categories.find(c => c.id === p.categoryId),
+        supplier: suppliers.find(s => s.id === p.supplierId),
       }));
-  }, [products, quantities, categories]);
+  }, [products, quantities, categories, suppliers]);
 
-  // Generate export text (newline-separated for WhatsApp compatibility)
+  // Generate export text grouped by supplier
   const generateExportText = useCallback(() => {
-    const lines = getListItems()
-      .map(item => `${item.product.supplierRef} x${item.quantity}`);
-    return lines.join('\n');
+    const items = getListItems();
+    const grouped = new Map<string, typeof items>();
+
+    items.forEach(item => {
+      const supplierName = item.supplier?.name || 'Sans fournisseur';
+      if (!grouped.has(supplierName)) {
+        grouped.set(supplierName, []);
+      }
+      grouped.get(supplierName)!.push(item);
+    });
+
+    const sections: string[] = [];
+    grouped.forEach((groupItems, supplierName) => {
+      sections.push(`📦 ${supplierName}`);
+      groupItems.forEach(item => {
+        sections.push(`${item.product.supplierRef} x${item.quantity}`);
+      });
+      sections.push('');
+    });
+
+    return sections.join('\n').trim();
   }, [getListItems]);
 
-  // Generate grouped export for PDF
+  // Generate grouped export for PDF (by supplier)
   const generateGroupedExport = useCallback(() => {
     const items = getListItems();
     const grouped = new Map<string, typeof items>();
-    
+
     items.forEach(item => {
-      const catId = item.product.categoryId;
-      if (!grouped.has(catId)) {
-        grouped.set(catId, []);
+      const supplierName = item.supplier?.name || 'Sans fournisseur';
+      if (!grouped.has(supplierName)) {
+        grouped.set(supplierName, []);
       }
-      grouped.get(catId)!.push(item);
+      grouped.get(supplierName)!.push(item);
     });
-    
+
     return Array.from(grouped.entries())
-      .map(([catId, items]) => ({
-        category: categories.find(c => c.id === catId)?.name || 'Autres',
-        items: items.map(i => ({ ref: i.product.supplierRef, qty: i.quantity })),
-      }))
-      .sort((a, b) => {
-        const catA = categories.find(c => c.name === a.category);
-        const catB = categories.find(c => c.name === b.category);
-        return (catA?.sortOrder || 999) - (catB?.sortOrder || 999);
-      });
-  }, [getListItems, categories]);
+      .map(([supplierName, groupItems]) => ({
+        category: supplierName,
+        items: groupItems.map(i => ({ ref: i.product.supplierRef, qty: i.quantity })),
+      }));
+  }, [getListItems]);
 
   return {
     categories: categories.sort((a, b) => a.sortOrder - b.sortOrder),
     products,
     quantities,
     favorites,
+    suppliers,
     waRecipients,
     emailRecipients,
     setQuantity,
@@ -296,6 +360,11 @@ export const useGroceryStore = () => {
     addEmailRecipient,
     updateEmailRecipient,
     deleteEmailRecipient,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
+    addProduct,
+    deleteProduct,
     getListItems,
     generateExportText,
     generateGroupedExport,

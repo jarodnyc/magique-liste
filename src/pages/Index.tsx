@@ -17,6 +17,7 @@ const Index = () => {
     products,
     quantities,
     favorites,
+    suppliers,
     waRecipients,
     emailRecipients,
     setQuantity,
@@ -32,6 +33,10 @@ const Index = () => {
     addEmailRecipient,
     updateEmailRecipient,
     deleteEmailRecipient,
+    addSupplier,
+    deleteSupplier,
+    addProduct,
+    deleteProduct,
     getListItems,
     generateExportText,
     generateGroupedExport,
@@ -200,6 +205,7 @@ const Index = () => {
         emailRecipients={emailRecipients}
         categories={categories}
         products={products}
+        suppliers={suppliers}
         onAddWaRecipient={addWaRecipient}
         onUpdateWaRecipient={updateWaRecipient}
         onDeleteWaRecipient={deleteWaRecipient}
@@ -208,6 +214,10 @@ const Index = () => {
         onDeleteEmailRecipient={deleteEmailRecipient}
         onUpdateCategories={updateCategories}
         onUpdateProducts={updateProducts}
+        onAddSupplier={addSupplier}
+        onDeleteSupplier={deleteSupplier}
+        onAddProduct={addProduct}
+        onDeleteProduct={deleteProduct}
       />
 
       <ConfirmDialog

@@ -9,9 +9,10 @@ export const exportCategoriesToCSV = (categories: Category[]): string => {
 };
 
 // Export products to CSV
-export const exportProductsToCSV = (products: Product[]): string => {
-  const headers = 'id,categoryId,displayName,supplierRef,imageKey';
-  const rows = products.map(p => `${p.id},${p.categoryId},${p.displayName},${p.supplierRef},${p.imageKey}`);
+export const exportProductsToCSV = (products: Product[], suppliers: { id: string; name: string }[] = []): string => {
+  const supplierMap = new Map(suppliers.map(s => [s.id, s.name]));
+  const headers = 'id,categoryId,displayName,supplierRef,imageKey,supplierId,supplierName';
+  const rows = products.map(p => `${p.id},${p.categoryId},${p.displayName},${p.supplierRef},${p.imageKey},${p.supplierId || ''},${supplierMap.get(p.supplierId || '') || ''}`);
   return [headers, ...rows].join('\n');
 };
 
@@ -97,20 +98,22 @@ export const parseProductsCSV = (csv: string, validCategoryIds: Set<string>): CS
     return result;
   }
 
-  // Check headers
+  // Check headers - support both old (5 col) and new (7 col) formats
   const csvHeaders = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const expectedHeaders = ['id', 'categoryid', 'displayname', 'supplierref', 'imagekey'];
+  const requiredHeaders = ['id', 'categoryid', 'displayname', 'supplierref', 'imagekey'];
   
-  const headersMatch = expectedHeaders.every(h => csvHeaders.includes(h));
+  const headersMatch = requiredHeaders.every(h => csvHeaders.includes(h));
   if (!headersMatch) {
     result.invalidRows.push({
       row: 1,
-      reason: 'En-têtes invalides. Attendu: id,categoryId,displayName,supplierRef,imageKey',
+      reason: 'En-têtes invalides. Attendu: id,categoryId,displayName,supplierRef,imageKey[,supplierId,supplierName]',
       data: lines[0],
     });
     result.invalid = 1;
     return result;
   }
+
+  const hasSupplier = csvHeaders.includes('supplierid');
 
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
@@ -119,10 +122,10 @@ export const parseProductsCSV = (csv: string, validCategoryIds: Set<string>): CS
 
     const values = line.split(',').map(v => v.trim());
     
-    if (values.length !== 5) {
+    if (values.length < 5) {
       result.invalidRows.push({
         row: i + 1,
-        reason: `Nombre de colonnes incorrect (${values.length} au lieu de 5)`,
+        reason: `Nombre de colonnes incorrect (${values.length}, minimum 5)`,
         data: line,
       });
       result.invalid++;
@@ -130,6 +133,7 @@ export const parseProductsCSV = (csv: string, validCategoryIds: Set<string>): CS
     }
 
     const [id, categoryId, displayName, supplierRef, imageKey] = values;
+    const supplierId = hasSupplier && values.length > 5 ? values[5] : undefined;
 
     if (!id || !displayName || !supplierRef || !imageKey) {
       result.invalidRows.push({
@@ -144,7 +148,10 @@ export const parseProductsCSV = (csv: string, validCategoryIds: Set<string>): CS
     // If categoryId is invalid, it will be remapped to cat_other
     const finalCategoryId = validCategoryIds.has(categoryId) ? categoryId : CAT_OTHER_ID;
 
-    (result.data as Product[]).push({ id, categoryId: finalCategoryId, displayName, supplierRef, imageKey });
+    const product: Product = { id, categoryId: finalCategoryId, displayName, supplierRef, imageKey };
+    if (supplierId) product.supplierId = supplierId;
+    
+    (result.data as Product[]).push(product);
     result.valid++;
   }
 
