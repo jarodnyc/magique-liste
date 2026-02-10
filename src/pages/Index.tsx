@@ -37,6 +37,7 @@ const Index = () => {
     deleteSupplier,
     addProduct,
     deleteProduct,
+    deleteCategory,
     getListItems,
     generateExportText,
     generateGroupedExport,
@@ -218,6 +219,7 @@ const Index = () => {
         onDeleteSupplier={deleteSupplier}
         onAddProduct={addProduct}
         onDeleteProduct={deleteProduct}
+        onDeleteCategory={deleteCategory}
       />
 
       <ConfirmDialog
