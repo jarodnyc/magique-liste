@@ -282,6 +282,13 @@ export const useGroceryStore = () => {
     });
   }, []);
 
+  // Delete category (reassign products to cat_other)
+  const deleteCategory = useCallback((id: string) => {
+    if (id === CAT_OTHER_ID) return; // Cannot delete "Autres"
+    setCategories(prev => prev.filter(c => c.id !== id));
+    setProducts(prev => prev.map(p => p.categoryId === id ? { ...p, categoryId: CAT_OTHER_ID } : p));
+  }, []);
+
   // Get items with quantity > 0
   const getListItems = useCallback(() => {
     return products
@@ -365,6 +372,7 @@ export const useGroceryStore = () => {
     deleteSupplier,
     addProduct,
     deleteProduct,
+    deleteCategory,
     getListItems,
     generateExportText,
     generateGroupedExport,

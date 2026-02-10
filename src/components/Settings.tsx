@@ -49,6 +49,7 @@ interface SettingsProps {
   onDeleteSupplier: (id: string) => void;
   onAddProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
+  onDeleteCategory: (id: string) => void;
 }
 
 type TabType = 'whatsapp' | 'email' | 'catalog' | 'suppliers';
@@ -73,6 +74,7 @@ export const Settings: React.FC<SettingsProps> = ({
   onDeleteSupplier,
   onAddProduct,
   onDeleteProduct,
+  onDeleteCategory,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('whatsapp');
   const [newWaName, setNewWaName] = useState('');
@@ -471,6 +473,18 @@ export const Settings: React.FC<SettingsProps> = ({
                     </button>
                     <input ref={categoriesFileRef} type="file" accept=".csv" onChange={handleCategoriesFileChange} className="hidden" />
                   </div>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {categories.map(cat => (
+                      <div key={cat.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
+                        <span className="text-sm font-medium">{cat.name}</span>
+                        {cat.id !== 'cat_other' && (
+                          <button onClick={() => onDeleteCategory(cat.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Supprimer (produits → Autres)">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Products section */}
@@ -487,6 +501,19 @@ export const Settings: React.FC<SettingsProps> = ({
                       <Upload className="w-4 h-4" /> Importer CSV
                     </button>
                     <input ref={productsFileRef} type="file" accept=".csv" onChange={handleProductsFileChange} className="hidden" />
+                  </div>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {products.map(prod => (
+                      <div key={prod.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium truncate block">{prod.displayName}</span>
+                          <span className="text-xs text-muted-foreground">{prod.supplierRef}</span>
+                        </div>
+                        <button onClick={() => onDeleteProduct(prod.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
