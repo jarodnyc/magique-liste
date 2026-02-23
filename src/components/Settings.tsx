@@ -10,7 +10,10 @@ import {
   Database,
   Truck,
   Package,
-  Tag
+  Tag,
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 import { Recipient, Category, Product, CSVImportResult, Supplier } from '@/types/grocery';
 import { 
@@ -46,10 +49,12 @@ interface SettingsProps {
   onUpdateCategories: (categories: Category[], mode: 'merge' | 'replace') => void;
   onUpdateProducts: (products: Product[], mode: 'merge' | 'replace') => void;
   onAddSupplier: (supplier: Supplier) => void;
+  onUpdateSupplier: (id: string, updates: Partial<Supplier>) => void;
   onDeleteSupplier: (id: string) => void;
   onAddProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
   onDeleteCategory: (id: string) => void;
+  onUpdateProduct: (id: string, updates: Partial<Product>) => void;
 }
 
 type TabType = 'whatsapp' | 'email' | 'catalog' | 'suppliers';
@@ -71,10 +76,12 @@ export const Settings: React.FC<SettingsProps> = ({
   onUpdateCategories,
   onUpdateProducts,
   onAddSupplier,
+  onUpdateSupplier,
   onDeleteSupplier,
   onAddProduct,
   onDeleteProduct,
   onDeleteCategory,
+  onUpdateProduct,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('whatsapp');
   const [newWaName, setNewWaName] = useState('');
@@ -101,11 +108,25 @@ export const Settings: React.FC<SettingsProps> = ({
   const [importType, setImportType] = useState<'categories' | 'products' | null>(null);
   const [showReplaceWarning, setShowReplaceWarning] = useState(false);
   const [pendingImportMode, setPendingImportMode] = useState<'merge' | 'replace' | null>(null);
-  
+
+  // Edit states
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategorySortOrder, setEditCategorySortOrder] = useState('');
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editProductName, setEditProductName] = useState('');
+  const [editProductRef, setEditProductRef] = useState('');
+  const [editProductCategory, setEditProductCategory] = useState('');
+  const [editProductSupplier, setEditProductSupplier] = useState('');
+  const [editingSupplier, setEditingSupplier] = useState<string | null>(null);
+  const [editSupplierName, setEditSupplierName] = useState('');
+
   const categoriesFileRef = useRef<HTMLInputElement>(null);
   const productsFileRef = useRef<HTMLInputElement>(null);
 
   const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  const slugify = (name: string) => name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 
   // WhatsApp handlers
   const handleAddWaRecipient = () => {
@@ -149,12 +170,61 @@ export const Settings: React.FC<SettingsProps> = ({
     if (newCategoryName.trim()) {
       const sortOrder = parseInt(newCategorySortOrder, 10);
       onUpdateCategories([{
-        id: `cat_${generateId()}`,
+        id: `cat_${slugify(newCategoryName.trim())}`,
         name: newCategoryName.trim(),
         sortOrder: isNaN(sortOrder) ? categories.length + 1 : sortOrder,
       }], 'merge');
       setNewCategoryName('');
       setNewCategorySortOrder('');
+    }
+  };
+
+  const startEditCategory = (cat: Category) => {
+    setEditingCategoryId(cat.id);
+    setEditCategoryName(cat.name);
+    setEditCategorySortOrder(String(cat.sortOrder));
+  };
+
+  const saveEditCategory = () => {
+    if (editingCategoryId && editCategoryName.trim()) {
+      onUpdateCategories([{
+        id: editingCategoryId,
+        name: editCategoryName.trim(),
+        sortOrder: parseInt(editCategorySortOrder, 10) || 0,
+      }], 'merge');
+      setEditingCategoryId(null);
+    }
+  };
+
+  const startEditProduct = (prod: Product) => {
+    setEditingProductId(prod.id);
+    setEditProductName(prod.displayName);
+    setEditProductRef(prod.supplierRef);
+    setEditProductCategory(prod.categoryId);
+    setEditProductSupplier(prod.supplierId || '');
+  };
+
+  const saveEditProduct = () => {
+    if (editingProductId && editProductName.trim() && editProductRef.trim()) {
+      onUpdateProduct(editingProductId, {
+        displayName: editProductName.trim(),
+        supplierRef: editProductRef.trim(),
+        categoryId: editProductCategory || 'cat_other',
+        supplierId: editProductSupplier || undefined,
+      });
+      setEditingProductId(null);
+    }
+  };
+
+  const startEditSupplier = (sup: Supplier) => {
+    setEditingSupplier(sup.id);
+    setEditSupplierName(sup.name);
+  };
+
+  const saveEditSupplier = () => {
+    if (editingSupplier && editSupplierName.trim()) {
+      onUpdateSupplier(editingSupplier, { name: editSupplierName.trim() });
+      setEditingSupplier(null);
     }
   };
 
@@ -362,12 +432,25 @@ export const Settings: React.FC<SettingsProps> = ({
                   <div className="space-y-2">
                     {suppliers.map(supplier => (
                       <div key={supplier.id} className="recipient-card">
-                        <div className="flex-1">
-                          <p className="font-medium">{supplier.name}</p>
-                        </div>
-                        <button onClick={() => onDeleteSupplier(supplier.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {editingSupplier === supplier.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input type="text" value={editSupplierName} onChange={(e) => setEditSupplierName(e.target.value)} className="search-input flex-1" />
+                            <button onClick={saveEditSupplier} className="p-1 text-primary"><Check className="w-4 h-4" /></button>
+                            <button onClick={() => setEditingSupplier(null)} className="p-1 text-muted-foreground"><X className="w-4 h-4" /></button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex-1">
+                              <p className="font-medium">{supplier.name}</p>
+                            </div>
+                            <button onClick={() => startEditSupplier(supplier)} className="p-2 text-muted-foreground hover:text-primary transition-colors">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => onDeleteSupplier(supplier.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -476,11 +559,29 @@ export const Settings: React.FC<SettingsProps> = ({
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {categories.map(cat => (
                       <div key={cat.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                        <span className="text-sm font-medium">{cat.name}</span>
-                        {cat.id !== 'cat_other' && (
-                          <button onClick={() => onDeleteCategory(cat.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Supprimer (produits → Autres)">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        {editingCategoryId === cat.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input type="text" value={editCategoryName} onChange={(e) => setEditCategoryName(e.target.value)} className="search-input flex-1" />
+                            <input type="number" value={editCategorySortOrder} onChange={(e) => setEditCategorySortOrder(e.target.value)} className="search-input w-16" placeholder="Tri" />
+                            <button onClick={saveEditCategory} className="p-1 text-primary"><Check className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => setEditingCategoryId(null)} className="p-1 text-muted-foreground"><X className="w-3.5 h-3.5" /></button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-sm font-medium">{cat.name}</span>
+                            <div className="flex items-center gap-1">
+                              {cat.id !== 'cat_other' && (
+                                <>
+                                  <button onClick={() => startEditCategory(cat)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Modifier">
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => onDeleteCategory(cat.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Supprimer (produits → Autres)">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     ))}
@@ -505,13 +606,36 @@ export const Settings: React.FC<SettingsProps> = ({
                   <div className="space-y-1 max-h-64 overflow-y-auto">
                     {products.map(prod => (
                       <div key={prod.id} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium truncate block">{prod.displayName}</span>
-                          <span className="text-xs text-muted-foreground">{prod.supplierRef}</span>
-                        </div>
-                        <button onClick={() => onDeleteProduct(prod.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {editingProductId === prod.id ? (
+                          <div className="flex-1 space-y-1">
+                            <input type="text" value={editProductName} onChange={(e) => setEditProductName(e.target.value)} className="search-input" placeholder="Nom" />
+                            <input type="text" value={editProductRef} onChange={(e) => setEditProductRef(e.target.value)} className="search-input" placeholder="Réf. fournisseur" />
+                            <select value={editProductCategory} onChange={(e) => setEditProductCategory(e.target.value)} className="search-input">
+                              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                            <select value={editProductSupplier} onChange={(e) => setEditProductSupplier(e.target.value)} className="search-input">
+                              <option value="">-- Fournisseur --</option>
+                              {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            <div className="flex gap-1 justify-end">
+                              <button onClick={saveEditProduct} className="p-1 text-primary"><Check className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => setEditingProductId(null)} className="p-1 text-muted-foreground"><X className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium truncate block">{prod.displayName}</span>
+                              <span className="text-xs text-muted-foreground">{prod.supplierRef}</span>
+                            </div>
+                            <button onClick={() => startEditProduct(prod)} className="p-1 text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => onDeleteProduct(prod.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

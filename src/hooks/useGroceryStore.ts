@@ -268,6 +268,11 @@ export const useGroceryStore = () => {
     setProducts(prev => [...prev, sanitized]);
   }, [categories]);
 
+  // Update product
+  const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, []);
+
   // Delete product
   const deleteProduct = useCallback((id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
@@ -318,7 +323,7 @@ export const useGroceryStore = () => {
     grouped.forEach((groupItems, supplierName) => {
       sections.push(`📦 ${supplierName}`);
       groupItems.forEach(item => {
-        sections.push(`${item.product.supplierRef} x${item.quantity}`);
+        sections.push(`${item.product.id} ${item.product.supplierRef} x${item.quantity}`);
       });
       sections.push('');
     });
@@ -342,7 +347,7 @@ export const useGroceryStore = () => {
     return Array.from(grouped.entries())
       .map(([supplierName, groupItems]) => ({
         category: supplierName,
-        items: groupItems.map(i => ({ ref: i.product.supplierRef, qty: i.quantity })),
+        items: groupItems.map(i => ({ ref: `${i.product.id} ${i.product.supplierRef}`, qty: i.quantity })),
       }));
   }, [getListItems]);
 
@@ -371,6 +376,7 @@ export const useGroceryStore = () => {
     updateSupplier,
     deleteSupplier,
     addProduct,
+    updateProduct,
     deleteProduct,
     deleteCategory,
     getListItems,
