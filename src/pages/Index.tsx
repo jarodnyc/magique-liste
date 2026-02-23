@@ -34,8 +34,10 @@ const Index = () => {
     updateEmailRecipient,
     deleteEmailRecipient,
     addSupplier,
+    updateSupplier,
     deleteSupplier,
     addProduct,
+    updateProduct,
     deleteProduct,
     deleteCategory,
     getListItems,
@@ -216,10 +218,12 @@ const Index = () => {
         onUpdateCategories={updateCategories}
         onUpdateProducts={updateProducts}
         onAddSupplier={addSupplier}
+        onUpdateSupplier={updateSupplier}
         onDeleteSupplier={deleteSupplier}
         onAddProduct={addProduct}
         onDeleteProduct={deleteProduct}
         onDeleteCategory={deleteCategory}
+        onUpdateProduct={updateProduct}
       />
 
       <ConfirmDialog

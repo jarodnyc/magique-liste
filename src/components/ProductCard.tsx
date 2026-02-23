@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
 import { Product } from '@/types/grocery';
 import { QuantityStepper } from './QuantityStepper';
-import { getProductIcon } from '@/utils/iconMap';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -24,7 +23,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onDecrement,
   onToggleFavorite,
 }) => {
-  const icon = getProductIcon(product.imageKey);
   const isImageFile = product.imageKey.startsWith('IMG/');
   const [showPreview, setShowPreview] = useState(false);
 
@@ -34,36 +32,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         'card-product p-3 flex items-center gap-3 animate-slide-up',
         quantity > 0 && 'ring-2 ring-primary/30 bg-accent/30'
       )}>
-        {/* Icon / Image */}
-        <div
-          className="icon-wrapper cursor-pointer"
-          onClick={() => isImageFile && setShowPreview(true)}
-        >
-          {isImageFile ? (
-            <img
-              src={'/' + product.imageKey}
-              alt={product.displayName}
-              className="w-8 h-8 rounded object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-          ) : (
-            <span role="img" aria-label={product.displayName}>
-              {icon}
-            </span>
-          )}
-          {isImageFile && (
-            <span className="hidden" role="img" aria-label={product.displayName}>
-              {icon}
-            </span>
-          )}
-        </div>
-
-        {/* Product Name */}
+        {/* Product Name - clickable for image preview */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-foreground truncate">
+          <h3
+            className={cn(
+              'font-medium text-foreground truncate',
+              isImageFile && 'cursor-pointer hover:text-primary transition-colors'
+            )}
+            onClick={() => isImageFile && setShowPreview(true)}
+          >
             {product.displayName}
           </h3>
         </div>
