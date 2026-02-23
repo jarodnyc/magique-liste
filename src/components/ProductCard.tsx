@@ -43,6 +43,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {product.displayName}
           </h3>
+          <p className="text-xs text-muted-foreground truncate">{product.supplierRef}</p>
         </div>
 
         {/* Favorite Button */}
